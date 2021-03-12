@@ -1,21 +1,21 @@
+// TODO add all comments
+
 extern crate sdl2;
 
 use rand::Rng;
 
 use crate::fontset::FONT;
+use crate::display::Display;
+use crate::input::Input;
 
-const MEMORY_SIZE: usize = 4096;
-const GAME_ENTRY: usize = 0x200; // most games load into 0x200
-const SCREEN_WIDTH: usize = 64;
-const SCREEN_HEIGHT: usize = 32;
 const OPCODE_SIZE: usize = 2;
 
 pub struct Processor {
-    memory: [u8; MEMORY_SIZE],
+    memory: [u8; crate::MEMORY_SIZE],
     register: [u8; 16],
     index: usize, // used to store memory addresses
     pc: usize, // programm counter
-    screen: [[u8; SCREEN_WIDTH]; SCREEN_HEIGHT],
+    screen: [[u8; crate::SCREEN_WIDTH]; crate::SCREEN_HEIGHT],
     draw_flag: bool, // redraw screen if true
     delay_timer: usize,
     sound_timer: usize,
@@ -28,7 +28,7 @@ pub struct Processor {
 
 impl Processor {
     pub fn new() -> Self {
-	let mut mem = [0; MEMORY_SIZE];
+	let mut mem = [0; crate::MEMORY_SIZE];
 	// load font
 	for (pos, &val) in FONT.iter().enumerate() {
 	    mem[pos] = val;
@@ -38,8 +38,8 @@ impl Processor {
 	    memory: mem,
 	    register: [0; 16],
 	    index: 0,
-	    pc: GAME_ENTRY,
-	    screen: [[0; SCREEN_WIDTH]; SCREEN_HEIGHT],
+	    pc: crate::GAME_ENTRY,
+	    screen: [[0; crate::SCREEN_WIDTH]; crate::SCREEN_HEIGHT],
 	    draw_flag: false,
 	    delay_timer: 0,
 	    sound_timer: 0,
@@ -51,18 +51,23 @@ impl Processor {
 	}
     }
 
-    // TODO: cartridge needed
-    pub fn start(&mut self) {
+    pub fn start(&mut self, game: &[u8]) {
 	let sdl_ctx = sdl2::init().unwrap();
+	let mut display = Display::new(&sdl_ctx);
+	let mut input = Input::new(&sdl_ctx);
+
+	self.load_game(&game);
 
 	loop {
 	    // get keyinput using sdl2
+	    self.key = input.fetch().unwrap();
 
 	    // emulate one cycle
 	    self.cycle();
 
 	    // draw to screen using sdl2
 	    if self.draw_flag {
+		display.draw(&self.screen);
 	    }
 
 	    // play sound using sdl2
@@ -72,7 +77,6 @@ impl Processor {
     }
 
     pub fn cycle(&mut self) {
-
 	// reset
 	self.draw_flag = false;
 
@@ -102,10 +106,9 @@ impl Processor {
     }
 
     pub fn load_game(&mut self, game: &[u8]) {
-	// load game
 	for (pos, &val) in game.iter().enumerate() {
-	    let position = GAME_ENTRY + pos;
-	    if position < MEMORY_SIZE { // don't go above mem limit
+	    let position = crate::GAME_ENTRY + pos;
+	    if position < crate::MEMORY_SIZE { // don't go above mem limit
 		self.memory[position] = val;
 	    }
 	    else {
@@ -122,11 +125,10 @@ impl Processor {
     pub fn decode_opcode(&mut self, opcode: u16) {
 	// values from http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3.0
 
-	// n or nibble - A 4-bit value, the lowest 4 bits of the instruction
 	let nibbles = (
-	    (opcode & 0xF000 >> 12) as usize,
-	    (opcode & 0x0F00 >> 8) as usize,
-	    (opcode & 0x00F0 >> 4) as usize,
+	    ((opcode & 0xF000) >> 12) as usize,
+	    ((opcode & 0x0F00) >> 8) as usize,
+	    ((opcode & 0x00F0) >> 4) as usize,
 	    (opcode & 0x000F) as usize
 	);
 
@@ -187,7 +189,8 @@ impl Processor {
 
     // Clear screen
     fn code_00e0(&mut self) {
-	self.screen = [[0; SCREEN_WIDTH]; SCREEN_HEIGHT];
+	self.screen = [[0; crate::SCREEN_WIDTH]; crate::SCREEN_HEIGHT];
+	self.draw_flag = true;
 	self.pc += OPCODE_SIZE;
     }
 
@@ -204,8 +207,8 @@ impl Processor {
 
     // Call subroutine at nnn
     fn code_2nnn(&mut self, nnn: usize) {
-	self.sp += 1;
 	self.stack[self.sp] = self.pc;
+	self.sp += 1;
 	self.pc = nnn;
     }
 
@@ -247,7 +250,8 @@ impl Processor {
 
     // Set Vx = Vx + kk
     fn code_7xkk(&mut self, x: usize, kk: u8) {
-	self.register[x] = self.register[x] + kk;
+	let val = self.register[x] as u16;
+	self.register[x] = (val + kk as u16) as u8;
 	self.pc += OPCODE_SIZE;
     }
 
@@ -290,7 +294,7 @@ impl Processor {
 	let y_val = self.register[y];
 	
 	self.register[0x0f] = (x_val > y_val) as u8;
-	self.register[x] = (x_val - y_val) as u8;
+	self.register[x] = x_val.wrapping_sub(y_val) as u8;
 	self.pc += OPCODE_SIZE;
     }
 
@@ -304,14 +308,14 @@ impl Processor {
     // Set Vx = Vy - Vx, set VF = NOT borrow
     fn code_8xy7(&mut self, x: usize, y: usize) {
 	self.register[0x0f] = (self.register[y] > self.register[x]) as u8;
-	self.register[x] = self.register[y] - self.register[x];
+	self.register[x] = self.register[y].wrapping_sub(self.register[x]);
 	self.pc += OPCODE_SIZE;
     }
 
     // Set Vx = Vx SHL 1
     fn code_8xye(&mut self, x: usize, _y: usize) {
 	self.register[0x0f] = (self.register[x] & 0b10000000) >> 7;
-	self.register[x] = self.register[x] * 2;
+	self.register[x] <<= 1;
 	self.pc += OPCODE_SIZE;
     }
 
@@ -345,19 +349,18 @@ impl Processor {
 
     // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
     fn code_dxyn(&mut self, x: usize, y: usize, n: usize) {
-	// TODO
 	self.register[0x0f] = 0;
 	for byte in 0..n {
 	    // get y coord, which we want to draw -> use modulo, so we don't overlap
-	    let y = (self.register[y] as usize + byte) % SCREEN_HEIGHT;
+	    let y = (self.register[y] as usize + byte) % crate::SCREEN_HEIGHT;
 	    for bit in 0..8 {
 		// get x coord, just as above
-		let x = (self.register[x] as usize + bit) % SCREEN_WIDTH;
+		let x = (self.register[x] as usize + bit) % crate::SCREEN_WIDTH;
 		// bit hack to get every bit in a row
 		let pixel_to_draw = (self.memory[self.index + byte] >> (7 - bit)) & 1;
 		// check if we will overwrite an existing pixel
-		self.register[0x0f] = self.register[0x0f] | (pixel_to_draw & self.screen[x][y]);
-		self.screen[x][y] = self.screen[x][y] ^ pixel_to_draw; 
+		self.register[0x0f] = self.register[0x0f] | (pixel_to_draw & self.screen[y][x]);
+		self.screen[y][x] = self.screen[y][x] ^ pixel_to_draw; 
 	    }
 	}
 	self.draw_flag = true;
@@ -435,7 +438,7 @@ impl Processor {
     // Store registers V0 through Vx in memory starting at location I
     fn code_fx55(&mut self, x: usize) {
 	// TODO offset correct?
-	for reg_i in 0..x {
+	for reg_i in 0..x + 1 {
 	    self.memory[self.index + reg_i] = self.register[reg_i];
 	}
 	self.pc += OPCODE_SIZE;
@@ -443,9 +446,250 @@ impl Processor {
 
     // Read registers V0 through Vx from memory starting at location I
     fn code_fx65(&mut self, x: usize) {
-	for reg_i in 0..x {
+	for reg_i in 0..x + 1 {
 	    self.register[reg_i] = self.memory[self.index + reg_i];
 	}
 	self.pc += OPCODE_SIZE;
     }
+}
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    fn new_processor() -> Processor {
+	let mut processor = Processor::new();
+	processor.register = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8];
+	processor
+    }
+
+    const ENTRY: usize = crate::GAME_ENTRY;
+    const SKIP: usize = ENTRY + OPCODE_SIZE * 2;
+    const NEXT: usize = ENTRY + OPCODE_SIZE;
+
+    #[test]
+    fn test_initial_state() {
+	let processor = Processor::new();
+	assert_eq!(processor.pc, 0x200);
+	assert_eq!(processor.sp, 0);
+	assert_eq!(processor.stack, [0; 16]);
+	// Font loading
+	assert_eq!(processor.memory[0..5], [0xF0, 0x90, 0x90, 0x90, 0xF0]);
+    }
+
+    #[test]
+    fn test_load_game() {
+	let mut processor = Processor::new();
+	processor.load_game(&[1, 2, 3]);
+	assert_eq!(processor.memory[crate::GAME_ENTRY], 1);
+	assert_eq!(processor.memory[crate::GAME_ENTRY + 1], 2);
+	assert_eq!(processor.memory[crate::GAME_ENTRY + 2], 3);
+    }
+
+    #[test]
+    fn test_code_00e0() {
+	let mut processor = Processor::new();
+	processor.screen = [[1; crate::SCREEN_WIDTH]; crate::SCREEN_HEIGHT];
+	processor.decode_opcode(0x00e0);
+	for y in 0..crate::SCREEN_HEIGHT {
+	    for x in 0..crate::SCREEN_WIDTH {
+		assert_eq!(processor.screen[y][x], 0);
+	    }
+	}
+    }
+
+    #[test]
+    fn test_code_00ee() {
+	let mut processor = Processor::new();
+	processor.sp = 3;
+	processor.stack[2] = 0x1337;
+	processor.decode_opcode(0x00ee);
+	assert_eq!(processor.sp, 2);
+	assert_eq!(processor.pc, 0x1337);
+    }
+
+    #[test]
+    fn test_code_1nnn() {
+	let mut processor = Processor::new();
+	processor.decode_opcode(0x1222);
+	assert_eq!(processor.pc, 0x0222);
+    }
+
+    #[test]
+    fn test_code_2nnn() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x2333);
+	assert_eq!(processor.sp, 1);
+	assert_eq!(processor.pc, 0x0333);
+	assert_eq!(processor.stack[0], NEXT);
+    }
+
+    #[test]
+    fn test_code_3xkk() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x3202);
+	assert_eq!(processor.pc, SKIP);
+
+	let mut processor = new_processor();
+	processor.decode_opcode(0x3206);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_4xkk() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x3206);
+	assert_eq!(processor.pc, NEXT);
+
+	let mut processor = new_processor();
+	processor.decode_opcode(0x3202);
+	assert_eq!(processor.pc, SKIP);
+    }
+
+    #[test]
+    fn test_code_5xy0() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x5010);
+	assert_eq!(processor.pc, SKIP);
+
+	let mut processor = new_processor();
+	processor.decode_opcode(0x5070);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_6xkk() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x6133);
+	assert_eq!(processor.register[1], 0x33);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_7xkk() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x7001);
+	assert_eq!(processor.register[0], 0x02);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xy0() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8f00);
+	assert_eq!(processor.register[0], 1);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xy1() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8011);
+	assert_eq!(processor.register[0], 1);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xy2() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8142);
+	assert_eq!(processor.register[1], 1);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xy3() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8143);
+	assert_eq!(processor.register[2], 2);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xy4() {
+	// no carry
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8124);
+	assert_eq!(processor.register[1], 3);
+	assert_eq!(processor.pc, NEXT);
+
+	// carry
+	let mut processor = new_processor();
+	processor.register[2] = 254;
+	processor.decode_opcode(0x8324);
+	assert_eq!(processor.register[1], 1);
+	assert_eq!(processor.register[0x0f], 1);
+	assert_eq!(processor.pc, NEXT);
+	
+    }
+
+    #[test]
+    fn test_code_8xy5() {
+	// set carry
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8205);
+	assert_eq!(processor.register[2], 1);
+	assert_eq!(processor.register[0x0f], 1);
+	assert_eq!(processor.pc, NEXT);
+
+	// don't set carry
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8065);
+	assert_eq!(processor.register[0], 253);
+	assert_eq!(processor.register[0x0f], 0);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xy6() {
+	// set VF
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8416);
+	assert_eq!(processor.register[0x0f], 1);
+	assert_eq!(processor.register[4], 1);
+	assert_eq!(processor.pc, NEXT);
+
+	// don't set VF
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8216);
+	assert_eq!(processor.register[0x0f], 0);
+	assert_eq!(processor.register[2], 1);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xy7() {
+	// set VF
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8937);
+	assert_eq!(processor.register[0x0f], 0);
+	assert_eq!(processor.register[9], 253);
+	assert_eq!(processor.pc, NEXT);
+
+	// don't set VF
+	let mut processor = new_processor();
+	processor.decode_opcode(0x8397);
+	assert_eq!(processor.register[0x0f], 1);
+	assert_eq!(processor.register[3], 3);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_8xye() {
+	// set VF
+	let mut processor = new_processor();
+	processor.register[0] = 0b10000000;
+	processor.decode_opcode(0x801e);
+	assert_eq!(processor.register[0x0f], 1);
+	assert_eq!(processor.register[0], 0);
+	assert_eq!(processor.pc, NEXT);
+
+	// don't set VF
+	let mut processor = new_processor();
+	processor.decode_opcode(0x801e);
+	assert_eq!(processor.register[0x0f], 0);
+	assert_eq!(processor.register[0], 2);
+	assert_eq!(processor.pc, NEXT);
+    }
+	
 }
