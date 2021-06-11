@@ -5,14 +5,16 @@ Yet another chip8 emulator written in rust \o/
 
 ## TODO
 
-Expand on this README
++ Expand on this README
++ Add some documentation
++ Add delay for beeper
++ Fix input
 
 ## System Dependencies
 
 `sdl2` together with its dependencies are required to be installed on your hostmachine.
-On arch-based distros you can use
-`sudo pacman -Syu sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_ttf`
-to install them.
+On Arch-based distros you can use these packages:
+`sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_ttf`
 
 ## Credits
 

@@ -1,5 +1,3 @@
-// TODO add all comments
-
 extern crate sdl2;
 
 use rand::Rng;
@@ -71,8 +69,10 @@ impl Processor {
 	    }
 
 	    // play sound using sdl2
+	    // TODO
 
 	    // add delay
+	    // TODO
 	}
     }
 
