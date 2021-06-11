@@ -44,7 +44,10 @@ impl Display {
 		    });
 		let _ = self.canvas
 		    .fill_rect(
-			Rect::new((x * crate::SCREEN_SCALE) as i32, (y * crate::SCREEN_SCALE) as i32, crate::SCREEN_SCALE as u32, crate::SCREEN_SCALE as u32));
+			Rect::new((x * crate::SCREEN_SCALE) as i32,
+				  (y * crate::SCREEN_SCALE) as i32,
+				  crate::SCREEN_SCALE as u32,
+				  crate::SCREEN_SCALE as u32));
 	    }
 	}
 	self.canvas.present();

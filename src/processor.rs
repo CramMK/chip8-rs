@@ -12,7 +12,7 @@ const OPCODE_SIZE: usize = 2;
 
 pub struct Processor {
     memory: [u8; crate::MEMORY_SIZE],
-    register: [u8; 16],
+    register: [u8; 16], // general purpose registers
     index: usize, // used to store memory addresses
     pc: usize, // programm counter
     screen: [[u8; crate::SCREEN_WIDTH]; crate::SCREEN_HEIGHT],
@@ -21,7 +21,7 @@ pub struct Processor {
     sound_timer: usize,
     stack: [usize; 16],
     sp: usize, // stack pointer
-    key: [bool; 16],
+    key: [bool; 16], // bool table for keyinputs
     waiting_for_key: bool,
     waiting_key_location: usize,
 }
@@ -56,11 +56,12 @@ impl Processor {
 	let mut display = Display::new(&sdl_ctx);
 	let mut input = Input::new(&sdl_ctx);
 
+	// load binary file
 	self.load_game(&game);
 
-	loop {
-	    // get keyinput using sdl2
-	    self.key = input.fetch().unwrap();
+	while let Ok(key) = input.fetch() {
+	    // get keypress from loop
+	    self.key = key;
 
 	    // emulate one cycle
 	    self.cycle();
@@ -294,7 +295,7 @@ impl Processor {
     fn code_8xy5(&mut self, x: usize, y: usize) {
 	let x_val = self.register[x];
 	let y_val = self.register[y];
-	
+
 	self.register[0x0f] = (x_val > y_val) as u8;
 	self.register[x] = x_val.wrapping_sub(y_val) as u8;
 	self.pc += OPCODE_SIZE;
@@ -764,13 +765,13 @@ mod tests{
 	// skip if equal
 	let mut processor = new_processor();
 	processor.key[9] = true;
-	processor.memory[3] = 9;
+	processor.register[3] = 9;
 	processor.decode_opcode(0xe39e);
 	assert_eq!(processor.pc, SKIP);
 
 	// dont skip
 	let mut processor = new_processor();
-	processor.memory[3] = 9;
+	processor.register[3] = 9;
 	processor.decode_opcode(0xe39e);
 	assert_eq!(processor.pc, NEXT);
     }
@@ -780,13 +781,13 @@ mod tests{
 	// skip if equal
 	let mut processor = new_processor();
 	processor.key[9] = true;
-	processor.memory[3] = 9;
+	processor.register[3] = 9;
 	processor.decode_opcode(0xe3a1);
 	assert_eq!(processor.pc, NEXT);
 
 	// dont skip
 	let mut processor = new_processor();
-	processor.memory[3] = 9;
+	processor.register[3] = 9;
 	processor.decode_opcode(0xe3a1);
 	assert_eq!(processor.pc, SKIP);
     }
