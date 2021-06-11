@@ -21,7 +21,8 @@ impl Input {
         }
 
         // get all inputs
-        let input: Vec<Keycode> = self.events
+        let input: Vec<Keycode> = self
+            .events
             .keyboard_state()
             .pressed_scancodes()
             .filter_map(Keycode::from_scancode)

@@ -3,14 +3,14 @@ extern crate sdl2;
 
 use std::env;
 
-mod processor;
-mod fontset;
-mod display;
-mod input;
 mod cartridge;
+mod display;
+mod fontset;
+mod input;
+mod processor;
 
-use crate::processor::Processor;
 use crate::cartridge::Cartridge;
+use crate::processor::Processor;
 
 const MEMORY_SIZE: usize = 4096;
 const GAME_ENTRY: usize = 0x200; // most games load into 0x200
