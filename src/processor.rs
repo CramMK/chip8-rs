@@ -80,7 +80,7 @@ impl Processor {
 	// reset
 	self.draw_flag = false;
 
-	// opcode FX0A holds the program, until a key is pressed
+	// opcode FX0A freezes the program, until a key is pressed
 	if self.waiting_for_key {
 	    for (pos, &val) in self.key.iter().enumerate() {
 		if self.key[pos] {
@@ -390,7 +390,7 @@ impl Processor {
     // Set Vx = delay timer value
     fn code_fx07(&mut self, x: usize) {
 	self.register[x] = self.delay_timer as u8;
-	self.pc = OPCODE_SIZE;
+	self.pc += OPCODE_SIZE;
     }
 
     // Wait for a key press, store the value of the key in Vx
@@ -518,10 +518,12 @@ mod tests{
     #[test]
     fn test_code_2nnn() {
 	let mut processor = new_processor();
+	processor.sp = 0;
+	let current = processor.pc;
 	processor.decode_opcode(0x2333);
 	assert_eq!(processor.sp, 1);
 	assert_eq!(processor.pc, 0x0333);
-	assert_eq!(processor.stack[0], NEXT);
+	assert_eq!(processor.stack[0], current);
     }
 
     #[test]
@@ -691,5 +693,194 @@ mod tests{
 	assert_eq!(processor.register[0], 2);
 	assert_eq!(processor.pc, NEXT);
     }
-	
+
+    #[test]
+    fn test_code_9xy0() {
+	// not equal, so skip
+	let mut processor = new_processor();
+	processor.decode_opcode(0x9020);
+	assert_eq!(processor.pc, SKIP);
+
+	// equal, so go next
+	let mut processor = new_processor();
+	processor.decode_opcode(0x9010);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_annn() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0xa420);
+	assert_eq!(processor.index, 0x420);
+    }
+
+    #[test]
+    fn test_code_bnnn() {
+	let mut processor = new_processor();
+	processor.register[0] = 1;
+	processor.decode_opcode(0xb111);
+	assert_eq!(processor.pc, 0x112);
+    }
+
+    #[test]
+    fn test_code_cxkk() {
+	let mut processor = new_processor();
+	// AND with 0 is zero
+	processor.decode_opcode(0xc000);
+	assert_eq!(processor.register[0], 0);
+	// AND with 0 in register[0] is still 0
+	processor.decode_opcode(0xc00f);
+	assert_eq!(processor.register[0] & 0xf0, 0)
+    }
+
+    #[test]
+    fn test_code_dxyn() {
+	let mut processor = new_processor();
+	processor.index = 0;
+	processor.memory[0] = 0b11111111;
+	processor.memory[1] = 0b00000000;
+	processor.screen[0][0] = 1;
+	processor.screen[0][1] = 0;
+	processor.screen[1][0] = 1;
+	processor.screen[1][1] = 0;
+	processor.register[0] = 0;
+	processor.decode_opcode(0xd002);
+
+	// flip on/ off
+	assert_eq!(processor.screen[0][0], 0);
+	assert_eq!(processor.screen[0][1], 1);
+	assert_eq!(processor.screen[1][0], 1);
+	assert_eq!(processor.screen[1][1], 0);
+	// update happened
+	assert_eq!(processor.register[0x0f], 1);
+	// capture screen update
+	assert_eq!(processor.draw_flag, true);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_ex9e() {
+	// skip if equal
+	let mut processor = new_processor();
+	processor.key[9] = true;
+	processor.memory[3] = 9;
+	processor.decode_opcode(0xe39e);
+	assert_eq!(processor.pc, SKIP);
+
+	// dont skip
+	let mut processor = new_processor();
+	processor.memory[3] = 9;
+	processor.decode_opcode(0xe39e);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_exa1() {
+	// skip if equal
+	let mut processor = new_processor();
+	processor.key[9] = true;
+	processor.memory[3] = 9;
+	processor.decode_opcode(0xe3a1);
+	assert_eq!(processor.pc, NEXT);
+
+	// dont skip
+	let mut processor = new_processor();
+	processor.memory[3] = 9;
+	processor.decode_opcode(0xe3a1);
+	assert_eq!(processor.pc, SKIP);
+    }
+
+    #[test]
+    fn test_code_fx07() {
+	let mut processor = new_processor();
+	processor.delay_timer = 42;
+	processor.decode_opcode(0xf207);
+	assert_eq!(processor.register[2], 42);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx0a() {
+	let mut processor = new_processor();
+	processor.decode_opcode(0xf20a);
+	assert_eq!(processor.waiting_for_key, true);
+	// TODO: missing some checks here?
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx15() {
+	let mut processor = new_processor();
+	processor.register[2] = 42;
+	processor.decode_opcode(0xf215);
+	assert_eq!(processor.delay_timer, 42);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx18() {
+	let mut processor = new_processor();
+	processor.register[2] = 42;
+	processor.decode_opcode(0xf218);
+	assert_eq!(processor.sound_timer, 42);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx1e() {
+	let mut processor = new_processor();
+	processor.index = 2;
+	processor.register[4] = 42;
+	processor.decode_opcode(0xf41e);
+	assert_eq!(processor.index, 44);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx29() {
+	let mut processor = new_processor();
+	processor.register[5] = 9;
+	processor.decode_opcode(0xf529);
+	assert_eq!(processor.index, 45);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx33() {
+	let mut processor = new_processor();
+	processor.register[2] = 123;
+	processor.index = 420;
+	processor.decode_opcode(0xf233);
+	assert_eq!(processor.memory[420], 1);
+	assert_eq!(processor.memory[420 + 1], 2);
+	assert_eq!(processor.memory[420 + 2], 3);
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx55() {
+	let mut processor = new_processor();
+	processor.index = 100;
+	processor.decode_opcode(0xff55);
+	// 0 to f
+	for mem in 0..16 {
+	    assert_eq!(processor.memory[100 + mem], processor.register[mem]);
+	}
+	assert_eq!(processor.pc, NEXT);
+    }
+
+    #[test]
+    fn test_code_fx65() {
+	let mut processor = new_processor();
+	processor.index = 100;
+	// 0 to f
+	for location in 0..16 {
+	    processor.memory[100 + location] = location as u8;
+	}
+	processor.decode_opcode(0xff65);
+	for mem in 0..16 {
+	    assert_eq!(processor.register[mem], processor.memory[100 + mem]);
+	}
+	assert_eq!(processor.pc, NEXT);
+    }
 }
