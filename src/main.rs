@@ -34,5 +34,4 @@ fn main() {
     let cartridge = Cartridge::new(&game_file.unwrap());
 
     processor.start(&cartridge.rom);
-
 }

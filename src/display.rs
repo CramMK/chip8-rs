@@ -10,7 +10,7 @@ impl Display {
 	let video = sdl_ctx.video().unwrap();
 	let window = video
 	    .window(
-		"FooBar",
+		"chip8-rs",
 		(crate::SCREEN_WIDTH * crate::SCREEN_SCALE) as u32,
 		(crate::SCREEN_HEIGHT * crate::SCREEN_SCALE) as u32)
             .position_centered()
@@ -30,7 +30,7 @@ impl Display {
 	Display {
 	    canvas,
 	}
-    }   
+    } 
 
     pub fn draw(&mut self, pixel: &[[u8; crate::SCREEN_WIDTH]; crate::SCREEN_HEIGHT]) {
 	for (y, &row) in pixel.iter().enumerate() {

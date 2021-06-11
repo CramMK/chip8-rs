@@ -137,13 +137,13 @@ impl Processor {
 
 	// n or nibble - A 4-bit value, the lowest 4 bits of the instruction
 	let n = nibbles.3 as usize;
-	
+
 	// x - A 4-bit value, the lower 4 bits of the high byte of the instruction
 	let x = nibbles.1 as usize;
 
 	// y - A 4-bit value, the upper 4 bits of the low byte of the instruction
 	let y = nibbles.2 as usize;
-	
+
 	//kk or byte - An 8-bit value, the lowest 8 bits of the instruction
 	let kk = (opcode & 0x00FF) as u8;
 

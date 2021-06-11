@@ -19,7 +19,7 @@ impl Input {
                 return Err(());
             }
         }
-        
+
         // get all inputs
         let input: Vec<Keycode> = self.events
             .keyboard_state()
