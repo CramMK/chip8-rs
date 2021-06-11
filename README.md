@@ -5,7 +5,7 @@ Yet another chip8 emulator written in rust \o/
 
 If you encounter any problems, I encourage you to open a PR!
 
-![PONG](media/pong.png)
+![PONG](pong.png)
 
 ## Games
 Due to legal reasons, I can't provide any games nor links to them.
