@@ -1,6 +1,8 @@
 extern crate sdl2;
 
 use rand::Rng;
+use std::time::Duration;
+use std::thread;
 
 use crate::fontset::FONT;
 use crate::display::Display;
@@ -71,8 +73,8 @@ impl Processor {
 	    // play sound using sdl2
 	    // TODO
 
-	    // add delay
-	    // TODO
+	    // modern pc's are too fast :o
+	    thread::sleep(Duration::from_millis(3));
 	}
     }
 
@@ -207,7 +209,7 @@ impl Processor {
 
     // Call subroutine at nnn
     fn code_2nnn(&mut self, nnn: usize) {
-	self.stack[self.sp] = self.pc;
+	self.stack[self.sp] = self.pc + 2;
 	self.sp += 1;
 	self.pc = nnn;
     }
@@ -519,11 +521,10 @@ mod tests{
     fn test_code_2nnn() {
 	let mut processor = new_processor();
 	processor.sp = 0;
-	let current = processor.pc;
 	processor.decode_opcode(0x2333);
 	assert_eq!(processor.sp, 1);
 	assert_eq!(processor.pc, 0x0333);
-	assert_eq!(processor.stack[0], current);
+	assert_eq!(processor.stack[0], NEXT);
     }
 
     #[test]

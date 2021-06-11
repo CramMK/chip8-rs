@@ -7,8 +7,8 @@ Yet another chip8 emulator written in rust \o/
 
 + Expand on this README
 + Add some documentation
-+ Add delay for beeper
-+ Fix input
++ Add sound for beeper
++ Fix tests for input
 
 ## System Dependencies
 

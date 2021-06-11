@@ -30,7 +30,7 @@ impl Display {
 	Display {
 	    canvas,
 	}
-    } 
+    }
 
     pub fn draw(&mut self, pixel: &[[u8; crate::SCREEN_WIDTH]; crate::SCREEN_HEIGHT]) {
 	for (y, &row) in pixel.iter().enumerate() {
