@@ -1,6 +1,6 @@
 # Install
 
-`sdl2` together with its dependencies (`sdl_gfx sdl2_imagee sdl2_mixer sdl2_ttf`)
+`sdl2` together with its dependencies (`sdl_gfx sdl2_image sdl2_mixer sdl2_ttf`)
 are required to be installed on your machine.
 
 ## Linux
