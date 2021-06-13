@@ -3,6 +3,10 @@
 `sdl2` together with its dependencies (`sdl_gfx sdl2_imagee sdl2_mixer sdl2_ttf`)
 are required to be installed on your machine.
 
+## Linux
+Arch-based distros can use these packages:
+`yay -Syu sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_ttf`
+
 ## Windows
 0. Make sure you have an installation of Visual Studio with the English language pack!
 1. Install Rustup from the official website https://www.rust-lang.org/tools/install
@@ -26,7 +30,3 @@ are required to be installed on your machine.
 
 You can now use the emulator by opening a command prompt in your "chip8-rs-master" folder and using the command `cargo run [PATH_TO_FILE]`.
 If the emulator doesn't recognize your dump, try putting it in the "chip8-rs-master" folder and use `cargo run [FILENAME]`.
-
-## Linux
-Arch-based distros can use these packages:
-`yay -Syu sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_ttf`
