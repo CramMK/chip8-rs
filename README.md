@@ -11,10 +11,8 @@ If you encounter any problems, I encourage you to open a PR!
 Due to legal reasons, I can't provide any games nor links to them.
 But they can be easily found by using a search engine!
 
-## System Dependencies
-`sdl2` together with its dependencies are required to be installed on your host machine.
-On Arch-based distros you can use these packages:
-`sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_ttf`
+## Dependencies
+Install instruction can be found [here](INSTALL.md)
 
 ## On Windows
 0. Make sure you have an installation of Visual Studio with the English language pack!
