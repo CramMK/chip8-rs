@@ -7,9 +7,8 @@ filenamewithquotes = (f'"{filename}"')
 
 print(filename)
 
-if filename == '' or 'None':
+if filename == None:
     sg.popup('Please select a file',no_titlebar=True)
     quit()
 
-else:
-    os.system(f'"cargo run -- {filenamewithquotes}"')
+os.system(f'"cargo run -- {filenamewithquotes}"')
