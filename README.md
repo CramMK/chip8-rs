@@ -12,7 +12,7 @@ Due to legal reasons, I can't provide any games nor links to them.
 But they can be easily found by using a search engine!
 
 ## Dependencies
-Install instruction can be found [here](INSTALL.md)
+Install instructions can be found [here](INSTALL.md).
 
 ## TODO
 [ ] Add Beeper Sound
