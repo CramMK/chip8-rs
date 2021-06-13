@@ -11,7 +11,7 @@ If you encounter any problems, I encourage you to open a PR!
 Due to legal reasons, I can't provide any games nor links to them.
 But they can be easily found by using a search engine!
 
-## Dependencies
+## Installation/Dependencies
 Install instructions can be found [here](INSTALL.md).
 
 ## TODO

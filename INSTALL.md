@@ -20,11 +20,9 @@ Arch-based distros can use these packages:
     `sudo apt-get install libsdl2-gfx-dev
 4. Using `cd` navigate to the extracted folder form the release you downloaded.
 5. Inside the folder run `cargo build`
-You can now use the emulator by opening a terminal in your "chip8-rs-master" folder and using the command `cargo run [PATH_TO_FILE]`.
-If the emulator doesn't recognize your dump, try putting it in the "chip8-rs-master" folder and use `cargo run [FILENAME]`.
-`
-    
-    
+You can now use the emulator by opening a terminal navigating to your extracted folder and using the command `./Chip8-KS`.
+You might need to allow the file to be run as a program if you get an error.
+  
 ## Windows
 0. Make sure you have an installation of Visual Studio with the English language pack!
 1. Install Rustup from the official website https://www.rust-lang.org/tools/install
@@ -46,5 +44,5 @@ If the emulator doesn't recognize your dump, try putting it in the "chip8-rs-mas
 14. Open a PowerShell Window by shift-right-clicking in the "chip8-rs-master" folder.
 15. Copy and Paste the following command and press Enter `cargo build`.
 
-You can now use the emulator by opening a command prompt in your "chip8-rs-master" folder and using the command `cargo run [PATH_TO_FILE]`.
-If the emulator doesn't recognize your dump, try putting it in the "chip8-rs-master" folder and use `cargo run [FILENAME]`.
+You can now use the emulator with the .exe launcher!
+
