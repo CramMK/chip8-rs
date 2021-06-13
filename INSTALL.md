@@ -17,9 +17,7 @@ Arch-based distros can use these packages:
     `sudo apt-get install libsdl2-image-dev`
     `sudo apt-get install libsdl2-mixer-dev`
     `sudo apt-get install libsdl2-ttf-dev`
-    `sudo apt-get install libsdl2-gfx-dev
-4. Using `cd` navigate to the extracted folder form the release you downloaded.
-5. Inside the folder run `cargo build`
+    `sudo apt-get install libsdl2-gfx-dev`
 You can now use the emulator by opening a terminal navigating to your extracted folder and using the command `./Chip8-KS`.
 You might need to allow the file to be run as a program if you get an error.
   
@@ -40,9 +38,7 @@ You might need to allow the file to be run as a program if you get an error.
 10. Shift-right-click and select "Open PowerShell Window Here" in the "vcpkg" folder. A command prompt will open.
 11. Copy and Paste the following command and press Enter `vcpkg.exe install sdl2-gfx --triplet x64-windows`(It'll give you an error if you're missing VS). 
 12. Navigate to \installed\x64-windows\lib in your vcpkg folder and copy `SDL2.lib` and `SDL2_gfx.lib` to `C:\user\%USERNAME%\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\x86_64-pc-windows-msvc\lib`.
-13. Download the source code by clicking the download button at the top of this page and selecting "Download Zip". Extract the file anywhere on your machine.
-14. Open a PowerShell Window by shift-right-clicking in the "chip8-rs-master" folder.
-15. Copy and Paste the following command and press Enter `cargo build`.
+13. Grab the latest release from this repository.
 
 You can now use the emulator with the .exe launcher!
 
