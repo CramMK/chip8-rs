@@ -20,7 +20,8 @@ Arch-based distros can use these packages:
     `sudo apt-get install libsdl2-gfx-dev
 4. Using `cd` navigate to the extracted folder form the release you downloaded.
 5. Inside the folder run `cargo build`
-You can now use the emulator by opening a terminal navigating to your extracted folder and using the command `./Chip8-KS`. 
+You can now use the emulator by opening a terminal navigating to your extracted folder and using the command `./Chip8-KS`.
+You might need to allow the file to be run as a program if you get an error.
   
 ## Windows
 0. Make sure you have an installation of Visual Studio with the English language pack!
