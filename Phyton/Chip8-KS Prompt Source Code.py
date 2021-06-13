@@ -11,4 +11,4 @@ if filename == None:
     sg.popup('Please select a file',no_titlebar=True)
     quit()
 
-os.system(f'"cargo run -- {filenamewithquotes}"')
+os.system(f'cargo run -- {filenamewithquotes}')
